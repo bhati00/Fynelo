@@ -4,6 +4,7 @@ import "time"
 
 type ICPProfile struct {
 	ID               uint      `gorm:"primaryKey" json:"id"`
+	UserId           uint      `json:"user_id"`
 	BusinessType     string    `json:"business_type"`
 	Industry         string    `json:"industry"`
 	CompanySize      string    `json:"company_size"`

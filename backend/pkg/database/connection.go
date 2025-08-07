@@ -13,6 +13,5 @@ func ConnectDatabase(cfg config.Config) {
 	if err != nil {
 		panic("Failed to connect to database!")
 	}
-
 	DB = db
 }
