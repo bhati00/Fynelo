@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/bhati00/Fynelo/backend/config"
-	"github.com/bhati00/Fynelo/backend/internal/icp"
-	"github.com/bhati00/Fynelo/backend/pkg/database"
+	"log"
+
+	app "github.com/bhati00/Fynelo/backend/internal/bootstrap"
 )
 
 func main() {
-	cfg := config.LoadConfig()
-	database.ConnectDatabase(cfg)
-	icp.Migrate()
+	r := app.InitializeApp()
+
+	log.Println("Server running on http://localhost:8080")
+	r.Run(":8080")
 }

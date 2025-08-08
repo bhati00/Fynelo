@@ -1,0 +1,207 @@
+basePath: /api/v1
+definitions:
+  icp.ICPProfile:
+    properties:
+      business_type:
+        type: string
+      buyer_roles:
+        type: string
+      company_size:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      industry:
+        type: string
+      problem_statement:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@fynelo.com
+    name: API Support
+  description: This is the backend API for Fynelo.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Fynelo API
+  version: "1.0"
+paths:
+  /icp:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Ideal Customer Profile for a given user
+      parameters:
+      - description: ICP Profile Data
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/icp.ICPProfile'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/icp.ICPProfile'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new ICP profile
+      tags:
+      - ICP
+  /icp/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an ICP profile by ID
+      parameters:
+      - description: ICP ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an ICP profile
+      tags:
+      - ICP
+    get:
+      consumes:
+      - application/json
+      description: Fetches an ICP profile using its unique ID
+      parameters:
+      - description: ICP ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/icp.ICPProfile'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get an ICP profile by ID
+      tags:
+      - ICP
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing ICP profile by ID
+      parameters:
+      - description: ICP ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated ICP Profile Data
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/icp.ICPProfile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/icp.ICPProfile'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an ICP profile
+      tags:
+      - ICP
+  /icp/user/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all ICP profiles associated with a given user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/icp.ICPProfile'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all ICP profiles for a user
+      tags:
+      - ICP
+swagger: "2.0"

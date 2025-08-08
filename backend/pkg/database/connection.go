@@ -8,10 +8,11 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDatabase(cfg config.Config) {
+func ConnectDatabase(cfg config.Config) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(cfg.DBPath), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to database!")
 	}
 	DB = db
+	return db
 }
