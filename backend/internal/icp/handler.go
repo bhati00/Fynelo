@@ -81,14 +81,14 @@ func (h *Handler) GetICPByIDHandler(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /icp/user/{user_id} [get]
 func (h *Handler) ListICPsByUserHandler(c *gin.Context) {
-	userIDStr := c.Param("user_id")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
+	// userIDStr := c.Param("user_id")
+	// userID, err := strconv.ParseUint(userIDStr, 10, 32)
+	// if err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	// 	return
+	// }
 
-	profiles, err := h.service.ListICPsByUser(uint(userID))
+	profiles, err := h.service.ListICPsByUser(0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ICPs"})
 		return

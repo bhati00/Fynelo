@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { icpService } from "@/services/icpService";
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 interface ICPCreateModalProps {
   open: boolean;

@@ -7,7 +7,7 @@ func RegisterICPRoutes(rg *gin.RouterGroup, h *Handler) {
 	{
 		icp.POST("", h.CreateICPHandler)
 		icp.GET("/:id", h.GetICPByIDHandler)
-		icp.GET("/user/:user_id", h.ListICPsByUserHandler)
+		icp.GET("/user", h.ListICPsByUserHandler)
 		icp.PUT("/:id", h.UpdateICPHandler)
 		icp.DELETE("/:id", h.DeleteICPHandler)
 	}

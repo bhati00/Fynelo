@@ -12,8 +12,8 @@ export const icpService = {
     apiClient.get<ICPProfile>(`/icp/${id}`),
 
   // List ICPs by User ID
-  listICPsByUser: (userId: string) =>
-    apiClient.get<ICPProfile[]>(`/icp/user/${userId}`),
+  listICPsByUser: () =>
+    apiClient.get<ICPProfile[]>(`/icp/user`),
 
   // Update ICP
   updateICP: (id: string, data: Partial<ICPProfile>) =>
