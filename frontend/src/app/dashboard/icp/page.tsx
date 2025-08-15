@@ -58,7 +58,7 @@ export default function ICPPage() {
           <Button
             size="lg"
             onClick={() => setIsModalOpen(true)}
-            className="cursor-pointer"
+            style={{ cursor: 'pointer' }}
           >
             Create ICP
           </Button>

@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "My App",
@@ -15,7 +16,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning className="bg-gray-50 text-gray-900">
-        {children}
+        <main>{children}</main>
+         <Toaster position="top-center"/>
       </body>
     </html>
   );
