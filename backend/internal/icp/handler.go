@@ -156,5 +156,5 @@ func (h *Handler) DeleteICPHandler(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, gin.H{"message": "ICP deleted successfully"})
 }

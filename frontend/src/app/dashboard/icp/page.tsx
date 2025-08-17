@@ -5,8 +5,10 @@ import { ICPProfile } from "@/models/icp";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import ICPCreateModal from "./ICPCreateModal"; // Adjust import path as needed
+import ICPCreateModal from "./ICPCreateModal";
+import ICPEditModal from "./ICPEditModal";
+import { DeleteConfirmationModal } from "@/components/shared/DeleteConfirmationModal";
+
 import { 
   Trash2, 
   Edit, 
@@ -17,14 +19,44 @@ import {
   Briefcase,
   Target
 } from "lucide-react";
-import { icpService } from "@/services/icpService"; // Adjust import path as needed
+import { icpService } from "@/services/icpService";
+import { getBusinessTypeLabel } from "@/constants/icpConstants";
+import { toast } from 'sonner';
 
 export default function ICPPage() {
   const [icps, setIcps] = useState<Partial<ICPProfile>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isUpdateModelOpen, setIsUpdateModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingICP, setEditingICP] = useState<Partial<ICPProfile> | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [icpToDelete, setIcpToDelete] = useState<string | null>(null);
+
+  const handleConfirmDelete = async () => {
+    if (!icpToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+        const response = await icpService.deleteICP(icpToDelete);
+      
+        if (response) {
+          
+          const errorMessage = response.message || "Failed to delete ICP";
+          toast.error(errorMessage);
+        } else {
+          toast.success("ICP deleted successfully!");
+          await fetchICPs();
+        }
+      } catch (error) {
+        console.error("Failed to delete ICP:", error);
+        toast.error("Failed to delete ICP. Please try again.");
+      } finally {
+        setIsDeleting(false);
+        setIsDeleteModalOpen(false);
+        setIcpToDelete(null);
+      }
+        };
 
   const fetchICPs = async () => {
     setIsLoading(true);
@@ -33,43 +65,31 @@ export default function ICPPage() {
       setIcps(data);
     } catch (error) {
       console.error("Failed to fetch ICPs:", error);
-      // Fallback to empty array on error
       setIcps([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this ICP? This action cannot be undone.")) {
-      return;
-    }
-
-    setIsDeleting(id);
-    try {
-      await icpService.deleteICP(id); // Assuming you have this method
-      await fetchICPs(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to delete ICP:", error);
-    } finally {
-      setIsDeleting(null);
-    }
+  // Updated handleDelete to use modal instead of confirm dialog
+  const handleDelete = (id: string) => {
+    setIcpToDelete(id);
+    setIsDeleteModalOpen(true);
   };
 
-  const handleEdit = (id: string) => {
-   
+  const handleEdit = (icp: Partial<ICPProfile>) => {
+    setEditingICP(icp);
+    setIsEditModalOpen(true);
   };
 
-  const formatArrayField = (field: string[] | string | undefined) => {
-    if (!field) return "-";
-    if (Array.isArray(field)) {
-      return field.map((item, index) => (
-        <Badge key={index} variant="secondary" className="mr-1 mb-1 text-xs">
-          {item}
-        </Badge>
-      ));
-    }
-    return field;
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setEditingICP(null);
+  };
+
+  const handleEditSuccess = () => {
+    fetchICPs();
+    handleEditModalClose();
   };
 
   useEffect(() => {
@@ -91,12 +111,10 @@ export default function ICPPage() {
     <div className="p-6 max-w-7xl mx-auto">
       {icps.length === 0 ? (
         <div className="flex flex-col items-center text-center space-y-6 py-12">
-          {/* Icon */}
           <div className="rounded-full bg-primary/10 p-6">
             <Target className="h-12 w-12 text-primary" />
           </div>
           
-          {/* Heading */}
           <div className="space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">No ICPs Yet</h2>
             <p className="max-w-lg text-muted-foreground leading-relaxed">
@@ -105,10 +123,9 @@ export default function ICPPage() {
             </p>
           </div>
 
-          {/* Create Button */}
           <Button
             size="lg"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsCreateModalOpen(true)}
             className="mt-4"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -117,7 +134,6 @@ export default function ICPPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold tracking-tight">Ideal Customer Profiles</h1>
@@ -125,13 +141,12 @@ export default function ICPPage() {
                 Manage your target customer profiles ({icps.length} total)
               </p>
             </div>
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create ICP
             </Button>
           </div>
 
-          {/* Table */}
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -163,24 +178,23 @@ export default function ICPPage() {
                   {icps.map((icp) => (
                     <TableRow key={icp.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">
-                        {icp.business_type || "-"}
+                        {typeof icp.business_type === "number" ? getBusinessTypeLabel(icp.business_type) : "-"}
                       </TableCell>
                       <TableCell>
                         {icp.industry || "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {formatArrayField(icp.company_size)}
+                          {typeof icp.company_size === "number" ? getBusinessTypeLabel(icp.company_size) : "-"}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1 max-w-xs">
-                          {formatArrayField(icp.buyer_roles)}
+                          {typeof icp.buyer_roles === "number" ? getBusinessTypeLabel(icp.buyer_roles) : "-"}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center space-x-1">
-                          {/* Search Companies */}
                           <Button
                             size="sm"
                             variant="outline"
@@ -190,27 +204,26 @@ export default function ICPPage() {
                             <Search className="h-4 w-4" />
                           </Button>
                           
-                          {/* Edit */}
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 w-8 p-0"
-                            onClick={() => handleEdit(icp.id!)}
+                            onClick={() => handleEdit(icp)}
                             title="Edit ICP"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           
-                          {/* Delete */}
+                          {/* Updated Delete Button - now opens modal instead of confirm dialog */}
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={() => handleDelete(icp.id!)}
-                            disabled={isDeleting === icp.id}
+                            disabled={isDeleting && icpToDelete === icp.id}
                             title="Delete ICP"
                           >
-                            {isDeleting === icp.id ? (
+                            {isDeleting && icpToDelete === icp.id ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
                             ) : (
                               <Trash2 className="h-4 w-4" />
@@ -227,11 +240,28 @@ export default function ICPPage() {
         </div>
       )}
 
-      {/* Modal */}
       <ICPCreateModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
         onCreated={fetchICPs}
+      />
+      
+      {editingICP && (
+        <ICPEditModal
+          open={isEditModalOpen}
+          onOpenChange={handleEditModalClose}
+          icpData={editingICP}
+          onUpdated={handleEditSuccess}
+        />
+      )}
+
+      <DeleteConfirmationModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        title="Delete ICP Profile"
+        description="This will permanently delete this Ideal Customer Profile. Any associated data will also be removed."
       />
     </div>
   );

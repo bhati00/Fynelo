@@ -9,10 +9,10 @@ import (
 type ICPProfile struct {
 	ID               uint      `gorm:"primaryKey" json:"id"`
 	UserId           uint      `json:"user_id"`
-	BusinessType     string    `json:"business_type"`
+	BusinessType     int       `json:"business_type"`
 	Industry         string    `json:"industry"`
-	CompanySize      string    `json:"company_size"`
-	BuyerRoles       string    `json:"buyer_roles"`
+	CompanySize      int       `json:"company_size"`
+	BuyerRoles       int       `json:"buyer_roles"`
 	ProblemStatement string    `json:"problem_statement"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`

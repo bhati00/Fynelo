@@ -9,6 +9,15 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { icpService } from "@/services/icpService";
 import { toast } from 'sonner';
+import { 
+  BUSINESS_TYPE_OPTIONS, 
+  COMPANY_SIZE_OPTIONS, 
+  BUYER_ROLE_OPTIONS,
+  type BusinessTypeValue,
+  type CompanySizeValue,
+  type BuyerRoleValue
+} from "@/constants/icpConstants";
+type Option = { value: number; label: string };
 
 interface ICPCreateModalProps {
   open: boolean;
@@ -17,46 +26,12 @@ interface ICPCreateModalProps {
 }
 
 interface FormData {
-  businessType: string;
+  businessType: BusinessTypeValue | "";
   industry: string;
-  companySize: string;
-  buyerRoles: string;
+  companySize: CompanySizeValue | "";
+  buyerRoles: BuyerRoleValue | "";
   problemStatement?: string;
 }
-
-const BUSINESS_TYPES = [
-  "B2B SaaS",
-  "E-commerce",
-  "Consulting",
-  "Manufacturing",
-  "Healthcare",
-  "Education",
-  "Financial Services",
-  "Real Estate",
-  "Other"
-];
-
-const COMPANY_SIZES = [
-  "1-10 employees",
-  "11-50 employees", 
-  "51-200 employees",
-  "201-500 employees",
-  "501-1000 employees",
-  "1000+ employees"
-];
-
-const BUYER_ROLES = [
-  "CEO/Founder",
-  "CTO/VP Engineering",
-  "Marketing Director/CMO",
-  "Sales Director/VP Sales",
-  "Operations Manager",
-  "HR Director",
-  "Finance Director/CFO",
-  "Product Manager",
-  "IT Manager",
-  "Other"
-];
 
 export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCreateModalProps) {
   const steps = [
@@ -69,15 +44,15 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
 
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
-    businessType: "",
+    businessType: 1 as BusinessTypeValue,
     industry: "",
-    companySize: "",
-    buyerRoles: "",
+    companySize: 1 as CompanySizeValue,
+    buyerRoles: 1 as BuyerRoleValue,
     problemStatement: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const updateFormData = (field: keyof FormData, value: string) => {
+  const updateFormData = (field: keyof FormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -102,7 +77,12 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
   const isCurrentStepValid = () => {
     const stepId = steps[currentStep].id as keyof FormData;
     if (stepId === "problemStatement") return true; // Optional field
-    return formData[stepId].trim() !== "";
+    
+    const value = formData[stepId];
+    if (stepId === "industry") {
+      return typeof value === "string" && value.trim() !== "";
+    }
+    return value !== "";
   };
 
   const handleSubmit = async () => {
@@ -110,15 +90,14 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
     
     try {
       const response = await icpService.createICP({
-          business_type: formData.businessType,
-          industry: formData.industry,
-          company_size: formData.companySize,
-          buyer_roles: formData.buyerRoles,
-          problem_statement: formData.problemStatement || undefined,
-        });
-      
+        business_type: formData.businessType as BusinessTypeValue,
+        industry: formData.industry,
+        company_size: formData.companySize as CompanySizeValue,
+        buyer_roles: formData.buyerRoles as BuyerRoleValue,
+        problem_statement: formData.problemStatement || undefined,
+      });
 
-      if (response  && response.id) {
+      if (response && response.id) {
         toast.success("ICP created successfully!");
         onCreated();
         handleClose();
@@ -156,14 +135,17 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
               <Label className="text-sm font-medium">Business Type</Label>
               <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
             </div>
-            <Select value={formData.businessType} onValueChange={(value) => updateFormData("businessType", value)}>
+            <Select 
+              value={formData.businessType.toString()} 
+              onValueChange={(value) => updateFormData("businessType", parseInt(value))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select business type" />
               </SelectTrigger>
               <SelectContent>
-                {BUSINESS_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
+                {BUSINESS_TYPE_OPTIONS.map((option : Option) => (
+                  <SelectItem key={option.value} value={option.value.toString()}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -193,14 +175,17 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
               <Label className="text-sm font-medium">Company Size</Label>
               <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
             </div>
-            <Select value={formData.companySize} onValueChange={(value) => updateFormData("companySize", value)}>
+            <Select 
+              value={formData.companySize.toString()} 
+              onValueChange={(value) => updateFormData("companySize", parseInt(value))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select company size" />
               </SelectTrigger>
               <SelectContent>
-                {COMPANY_SIZES.map((size) => (
-                  <SelectItem key={size} value={size}>
-                    {size}
+                {COMPANY_SIZE_OPTIONS.map((option : Option) => (
+                  <SelectItem key={option.value} value={option.value.toString()}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -215,14 +200,17 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
               <Label className="text-sm font-medium">Target Buyer Role</Label>
               <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
             </div>
-            <Select value={formData.buyerRoles} onValueChange={(value) => updateFormData("buyerRoles", value)}>
+            <Select 
+              value={formData.buyerRoles.toString()} 
+              onValueChange={(value) => updateFormData("buyerRoles", parseInt(value))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select buyer role" />
               </SelectTrigger>
               <SelectContent>
-                {BUYER_ROLES.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
+                {BUYER_ROLE_OPTIONS.map((option : Option) => (
+                  <SelectItem key={option.value} value={option.value.toString()}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
