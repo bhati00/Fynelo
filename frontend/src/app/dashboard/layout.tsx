@@ -2,81 +2,241 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { 
+  Menu, 
+  X, 
+  Home, 
+  Users,
+  Building2,
+  List,
+  Send,
+  Mail,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+
+type MenuItem = {
+  type: "link";
+  href: string; // Explicitly required
+  icon: React.ReactNode;
+  label: string;
+  tooltip: string;
+} | {
+  type: "heading";
+  label: string;
+};
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const menuItems: MenuItem[] = [
+    {
+      type: "link",
+      href: "/dashboard",
+      icon: <Home className="h-4 w-4" />,
+      label: "Home",
+      tooltip: "Return to dashboard homepage"
+    },
+    {
+      type: "heading",
+      label: "Prospect & Enrich"
+    },
+    {
+      type: "link",
+      href: "/dashboard/icps",
+      icon: <Users className="h-4 w-4" />,
+      label: "ICPs",
+      tooltip: "Manage Ideal Customer Profiles"
+    },
+    {
+      type: "link",
+      href: "/dashboard/companies",
+      icon: <Building2 className="h-4 w-4" />,
+      label: "Companies",
+      tooltip: "View and manage companies"
+    },
+    {
+      type: "link",
+      href: "/dashboard/peoples",
+      icon: <Users className="h-4 w-4" />,
+      label: "Peoples",
+      tooltip: "Manage people contacts"
+    },
+    {
+      type: "link",
+      href: "/dashboard/lists",
+      icon: <List className="h-4 w-4" />,
+      label: "Lists",
+      tooltip: "Manage contact lists"
+    },
+    {
+      type: "heading",
+      label: "Engage"
+    },
+    {
+      type: "link",
+      href: "/dashboard/campaigns",
+      icon: <Send className="h-4 w-4" />,
+      label: "Campaigns",
+      tooltip: "Manage marketing campaigns"
+    },
+    {
+      type: "link",
+      href: "/dashboard/emails",
+      icon: <Mail className="h-4 w-4" />,
+      label: "Emails",
+      tooltip: "View and send emails"
+    }
+  ];
+
+  // Function to check if a link is active
+  const isActive = (href: string) => {
+    return pathname === href || 
+           (href !== "/dashboard" && pathname?.startsWith(href));
+  };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar (Mobile Overlay) */}
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile Sidebar */}
       <div
         className={`fixed inset-0 z-40 lg:hidden transition-transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}></div>
-        <aside className="relative z-50 w-64 bg-white border-r p-4">
+        <div 
+          className="absolute inset-0 bg-black bg-opacity-50" 
+          onClick={() => setMobileSidebarOpen(false)}
+        ></div>
+        <aside className="relative z-50 w-64 bg-white dark:bg-gray-800 border-r p-4">
           <div className="flex justify-between items-center mb-6">
-            <span className="text-xl font-bold">Fynelo</span>
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+            {!collapsed && <span className="text-xl font-bold">Fynelo</span>}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setMobileSidebarOpen(false)}
+            >
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <nav className="space-y-2">
-            <Link href="/dashboard" className="block p-2 rounded hover:bg-gray-100">
-              Home
-            </Link>
-            <Link href="/dashboard/icps" className="block p-2 rounded hover:bg-gray-100">
-              ICPs (Ideal customer profiles)
-            </Link>
-            <Link href="/dashboard/companies" className="block p-2 rounded hover:bg-gray-100">
-              Companies
-            </Link>
-            <Link href="/dashboard/peoples" className="block p-2 rounded hover:bg-gray-100">
-              Peoples
-            </Link>
-            <Link href="/dashboard/peoples" className="block p-2 rounded hover:bg-gray-100">
-              Leads
-            </Link>
+          <nav className="space-y-1">
+            {menuItems.map((item, index) => {
+              if (item.type === "heading") {
+                return (
+                  <div 
+                    key={index} 
+                    className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-2 px-2"
+                  >
+                    {item.label}
+                  </div>
+                );
+              } else {
+                return (
+                  <Link 
+                    key={index}
+                    href={item.href}
+                    className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                      isActive(item.href) 
+                        ? "bg-primary/10 text-primary font-medium dark:bg-primary/20" 
+                        : ""
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              }
+            })}
           </nav>
         </aside>
       </div>
 
-      {/* Sidebar (Desktop) */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-white border-r p-4">
-        <div className="text-xl font-bold mb-6">Fynelo</div>
-        <nav className="space-y-2">
-          <Link href="/dashboard" className="block p-2 rounded hover:bg-gray-100">
-            Home
-          </Link>
-          <Link href="/dashboard/icp" className="block p-2 rounded hover:bg-gray-100">
-            ICPs (Ideal customer profiles)
-          </Link>
-          <Link href="/dashboard/reports" className="block p-2 rounded hover:bg-gray-100">
-            Companies
-          </Link>
-           <Link href="/dashboard/peoples" className="block p-2 rounded hover:bg-gray-100">
-              Peoples
-            </Link>
+      {/* Desktop Sidebar */}
+      <aside 
+        className={`hidden lg:flex lg:flex-col bg-white dark:bg-gray-800 border-r p-4 transition-all duration-300 ${
+          collapsed ? "w-16" : "w-64"
+        }`}
+      >
+        <div className="flex justify-between items-center mb-6">
+          {!collapsed && <span className="text-xl font-bold">Fynelo</span>}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="ml-auto"
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
+        
+        <nav className="space-y-1">
+          {menuItems.map((item, index) => {
+            if (item.type === "heading") {
+              return !collapsed ? (
+                <div 
+                  key={index} 
+                  className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-2 px-2"
+                >
+                  {item.label}
+                </div>
+              ) : null;
+            } else {
+              return (
+                <Tooltip key={index} delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        collapsed ? "justify-center" : ""
+                      } ${
+                        isActive(item.href)
+                          ? "bg-primary/10 text-primary font-medium dark:bg-primary/20"
+                          : ""
+                      }`}
+                    >
+                      {item.icon}
+                      {!collapsed && <span>{item.label}</span>}
+                    </Link>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      {item.tooltip}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              );
+            }
+          })}
         </nav>
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navbar */}
-        <header className="flex items-center justify-between bg-white border-b px-6 py-3">
+        <header className="flex items-center justify-between bg-white dark:bg-gray-800 border-b px-6 py-3">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="lg:hidden" 
+              onClick={() => setMobileSidebarOpen(true)}
+            >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="text-lg font-semibold">Welcome Dear user !</span>
+            <span className="text-lg font-semibold">Welcome Dear user!</span>
           </div>
           <div className="flex items-center gap-4">
             <Avatar>
@@ -87,7 +247,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
   );
