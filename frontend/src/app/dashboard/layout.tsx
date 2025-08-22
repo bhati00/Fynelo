@@ -12,8 +12,6 @@ import {
   List,
   Send,
   Mail,
-  ChevronLeft,
-  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,10 +20,11 @@ import {
   TooltipContent, 
   TooltipTrigger 
 } from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/ui/themeToggle";
 
 type MenuItem = {
   type: "link";
-  href: string; // Explicitly required
+  href: string;
   icon: React.ReactNode;
   label: string;
   tooltip: string;
@@ -40,7 +39,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const menuItems: MenuItem[] = [
@@ -123,7 +121,7 @@ export default function DashboardLayout({
         ></div>
         <aside className="relative z-50 w-64 bg-white dark:bg-gray-800 border-r p-4">
           <div className="flex justify-between items-center mb-6">
-            {!collapsed && <span className="text-xl font-bold">Fynelo</span>}
+            <img src="/logo.png" alt="Fynelo Logo" className="h-8 w-auto" />
             <Button 
               variant="ghost" 
               size="icon" 
@@ -164,35 +162,26 @@ export default function DashboardLayout({
         </aside>
       </div>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar (Always collapsed, expands on hover) */}
       <aside 
-        className={`hidden lg:flex lg:flex-col bg-white dark:bg-gray-800 border-r p-4 transition-all duration-300 ${
-          collapsed ? "w-16" : "w-64"
-        }`}
+        className="hidden lg:flex lg:flex-col bg-white dark:bg-gray-800 border-r p-4 
+                   w-16 hover:w-64 transition-all duration-300 group"
       >
-        <div className="flex justify-between items-center mb-6">
-          {!collapsed && <span className="text-xl font-bold">Fynelo</span>}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCollapsed(!collapsed)}
-            className="ml-auto"
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+        <div className="flex items-center mb-6">
+          <img src="/logoFavicon.png" alt="Fynelo Logo" className="h-8 w-auto" />
         </div>
         
         <nav className="space-y-1">
           {menuItems.map((item, index) => {
             if (item.type === "heading") {
-              return !collapsed ? (
+              return (
                 <div 
                   key={index} 
-                  className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-2 px-2"
+                  className="hidden group-hover:block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-2 px-2"
                 >
                   {item.label}
                 </div>
-              ) : null;
+              );
             } else {
               return (
                 <Tooltip key={index} delayDuration={100}>
@@ -200,22 +189,18 @@ export default function DashboardLayout({
                     <Link
                       href={item.href}
                       className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                        collapsed ? "justify-center" : ""
-                      } ${
                         isActive(item.href)
                           ? "bg-primary/10 text-primary font-medium dark:bg-primary/20"
                           : ""
                       }`}
                     >
                       {item.icon}
-                      {!collapsed && <span>{item.label}</span>}
+                      <span className="hidden group-hover:inline">{item.label}</span>
                     </Link>
                   </TooltipTrigger>
-                  {collapsed && (
-                    <TooltipContent side="right">
-                      {item.tooltip}
-                    </TooltipContent>
-                  )}
+                  <TooltipContent side="right">
+                    {item.tooltip}
+                  </TooltipContent>
                 </Tooltip>
               );
             }
@@ -239,6 +224,7 @@ export default function DashboardLayout({
             <span className="text-lg font-semibold">Welcome Dear user!</span>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Avatar>
               <AvatarImage src="https://github.com/shadcn.png" />
               <AvatarFallback>U</AvatarFallback>
