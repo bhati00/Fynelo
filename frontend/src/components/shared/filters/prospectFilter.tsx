@@ -1,227 +1,309 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Filter, X } from 'lucide-react';
-import { ICPFilter, ICPProfile } from './icpFilter';
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import { ChevronDown, ChevronRight, Filter, X, Check } from "lucide-react"
+import FundingStageFilter from "./FundingStageFilter"
 
 // Type definitions
 interface FilterSectionProps {
-  title: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-  count?: number;
+  title: string
+  isExpanded: boolean
+  onToggle: () => void
+  children: React.ReactNode
+  selectedValue?: string
+  hasSelection?: boolean
 }
 
-interface ICPFilterProps {
-  onICPSelect: (value: string) => void;
-  placeholder: string;
-  className: string;
+export interface ProspectFilterValues {
+  icpId: number
+  minRevenue: number
+  maxRevenue: number
+  fundingStage: number
+  technology: string
+  fundingAmount: number
 }
 
 interface ProspectFilterProps {
-  onFilterChange?: (filters: Record<string, unknown>) => void;
-  pageType?: 'companies' | 'employees';
-  ICPFilter?: React.ComponentType<ICPFilterProps>;
+  onFilterChange?: (filters: ProspectFilterValues) => void
+  onApply?: () => void
+  pageType?: "companies" | "employees"
 }
 
 interface ExpandedSections {
-  [key: string]: boolean;
+  [key: string]: boolean
 }
 
 // Individual filter section component
-const FilterSection: React.FC<FilterSectionProps> = ({ 
-  title, 
-  isExpanded, 
-  onToggle, 
-  children, 
-  count = 0 
+const FilterSection: React.FC<FilterSectionProps> = ({
+  title,
+  isExpanded,
+  onToggle,
+  children,
+  selectedValue,
+  hasSelection = false,
 }) => {
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
+    <div className="border border-gray-200 rounded-lg mb-3 bg-white shadow-sm">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-3 px-0 text-left hover:bg-gray-50 transition-colors duration-150 group"
+        className="w-full flex items-center justify-between py-3 px-4 text-left hover:bg-gray-50 transition-colors duration-150 group rounded-t-lg"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-            {title}
-          </span>
-          {count > 0 && (
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-              {count}
-            </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">{title}</span>
+            {hasSelection && (
+              <div className="flex items-center gap-1">
+                <Check className="h-3 w-3 text-green-600" />
+                <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">1</span>
+              </div>
+            )}
+          </div>
+          {selectedValue && <div className="text-xs text-gray-500 truncate">{selectedValue}</div>}
+        </div>
+        <div className="ml-2 flex-shrink-0">
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-transform duration-200" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-transform duration-200" />
           )}
         </div>
-        {isExpanded ? (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        ) : (
-          <ChevronRight className="h-4 w-4 text-gray-500" />
-        )}
       </button>
       {isExpanded && (
-        <div className="pb-4 pl-0">
-          {children}
+        <div className="border-t border-gray-200 bg-gray-50 overflow-hidden">
+          <div className="p-4 max-h-80 overflow-y-auto">{children}</div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 // Main ProspectFilter component
-const ProspectFilter: React.FC<ProspectFilterProps> = ({ 
-  onFilterChange, 
-  pageType = 'companies',
-}) => {
+const ProspectFilter: React.FC<ProspectFilterProps> = ({ onFilterChange, onApply, pageType = "companies" }) => {
   const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
-    icp: true, // Start with ICP section expanded
-  });
+    funding: true, // Start with funding section expanded
+  })
 
-  const [filters, setFilters] = useState<Record<string, unknown>>({
-    icp: null,
-  });
+  const [filters, setFilters] = useState<ProspectFilterValues>({
+    icpId: 0,
+    minRevenue: 0,
+    maxRevenue: 0,
+    fundingStage: 0,
+    technology: "",
+    fundingAmount: 0,
+  })
+
+  // Helper function to get funding stage label
+  const getFundingStageLabel = (stageId: number): string => {
+    const stages: Record<number, string> = {
+      0: "All Stages",
+      1: "Seed",
+      2: "Series A",
+      3: "Series B",
+      4: "Series C+",
+      5: "IPO",
+      6: "Private Equity",
+    }
+    return stages[stageId] || "All Stages"
+  }
+
+  // Check if any filters are applied
+  const hasActiveFilters = (): boolean => {
+    return (
+      filters.fundingStage !== 0 ||
+      filters.minRevenue > 0 ||
+      filters.maxRevenue > 0 ||
+      filters.technology !== "" ||
+      filters.fundingAmount > 0
+    )
+  }
+
+  // Clear all filters
+  const clearAllFilters = (): void => {
+    setFilters({
+      icpId: 0,
+      minRevenue: 0,
+      maxRevenue: 0,
+      fundingStage: 0,
+      technology: "",
+      fundingAmount: 0,
+    })
+  }
+
+  // Safe filter updater
+  const updateFilter = <K extends keyof ProspectFilterValues>(key: K, value: ProspectFilterValues[K]) => {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  // Trigger parent callback when filters change
+  useEffect(() => {
+    if (onFilterChange) {
+      onFilterChange(filters)
+    }
+  }, [filters, onFilterChange])
 
   const toggleSection = (sectionKey: string): void => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [sectionKey]: !prev[sectionKey]
-    }));
-  };
-
-  const handleICPSelection = (icp: ICPProfile | null): void => {
-    const newFilters = { ...filters, icp };
-    setFilters(newFilters);
-    onFilterChange?.(newFilters);
-  };
-
-  const clearFilter = (filterKey: string): void => {
-    const newFilters = { ...filters, [filterKey]: '' };
-    setFilters(newFilters);
-    onFilterChange?.(newFilters);
-  };
-
-  const clearAllFilters = (): void => {
-    const clearedFilters = Object.keys(filters).reduce<Record<string, unknown>>((acc, key) => {
-      acc[key] = '';
-      return acc;
-    }, {});
-    setFilters(clearedFilters);
-    onFilterChange?.(clearedFilters);
-  };
-
-  const activeFilterCount = Object.values(filters).filter((value: unknown) => value && value !== '').length;
+      [sectionKey]: !prev[sectionKey],
+    }))
+  }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 h-full">
-      {/* Filter Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-600" />
-            <h3 className="text-sm font-semibold text-gray-900">
-              Filter {pageType === 'companies' ? 'Companies' : 'People'}
-            </h3>
-            {activeFilterCount > 0 && (
-              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
-                {activeFilterCount}
-              </span>
-            )}
+    <div className="w-[450px] bg-white border-r border-gray-200 flex flex-col h-full min-h-0 flex-shrink-0 overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <Filter className="h-4 w-4 text-blue-600" />
           </div>
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearAllFilters}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Clear all
-            </button>
-          )}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Filter {pageType}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Refine your search results</p>
+          </div>
         </div>
       </div>
 
-      {/* Active Filters Display */}
-      {activeFilterCount > 0 && (
-        <div className="p-4 bg-blue-50 border-b border-gray-200">
-          <div className="text-xs text-gray-600 mb-2">Active filters:</div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(filters).map(([key, value]: [string, unknown]) => {
-              if (!value) return null;
-              return (
-                <div
-                  key={key}
-                  className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
-                >
-                  <span className="capitalize">{key}: {String(value)}</span>
-                  <button
-                    onClick={() => clearFilter(key)}
-                    className="hover:bg-blue-200 rounded-full p-0.5"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Filter Sections */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-0">
-          
-          {/* ICP Filter Section */}
+      <div className="flex-1 overflow-y-auto min-h-0 max-h-full">
+        <div className="p-4 space-y-1">
+          {/* Funding Stage Filter */}
           <FilterSection
-            title="Ideal Customer Profile"
-            isExpanded={expandedSections.icp}
-            onToggle={() => toggleSection('icp')}
-            count={filters.icp ? 1 : 0}
+            title="Funding Stage"
+            isExpanded={expandedSections.funding}
+            onToggle={() => toggleSection("funding")}
+            selectedValue={filters.fundingStage !== 0 ? getFundingStageLabel(filters.fundingStage) : undefined}
+            hasSelection={filters.fundingStage !== 0}
           >
-            <ICPFilter
-              onICPSelect={handleICPSelection}
-              placeholder="Select an ICP..."
-              className="w-full" icpService={{
-                listICPsByUser: function (): Promise<ICPProfile[]> {
-                  throw new Error('Function not implemented.');
-                }
-              }}            />
+            <FundingStageFilter value={filters.fundingStage} onChange={(val) => updateFilter("fundingStage", val)} />
           </FilterSection>
 
-          {/* Placeholder for future filter sections */}
+          <FilterSection
+            title="Revenue Range"
+            isExpanded={expandedSections.revenue}
+            onToggle={() => toggleSection("revenue")}
+            hasSelection={filters.minRevenue > 0 || filters.maxRevenue > 0}
+          >
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Minimum Revenue</label>
+                <select
+                  value={filters.minRevenue}
+                  onChange={(e) => updateFilter("minRevenue", Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={0}>Any</option>
+                  <option value={1000000}>$1M+</option>
+                  <option value={10000000}>$10M+</option>
+                  <option value={50000000}>$50M+</option>
+                  <option value={100000000}>$100M+</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Maximum Revenue</label>
+                <select
+                  value={filters.maxRevenue}
+                  onChange={(e) => updateFilter("maxRevenue", Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={0}>Any</option>
+                  <option value={10000000}>$10M</option>
+                  <option value={50000000}>$50M</option>
+                  <option value={100000000}>$100M</option>
+                  <option value={500000000}>$500M</option>
+                </select>
+              </div>
+            </div>
+          </FilterSection>
+
           <FilterSection
             title="Industry"
             isExpanded={expandedSections.industry}
-            onToggle={() => toggleSection('industry')}
-            count={0}
+            onToggle={() => toggleSection("industry")}
+            hasSelection={filters.technology !== ""}
           >
-            <div className="text-sm text-gray-500 italic">
-              Coming soon...
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search industries..."
+                  value={filters.technology}
+                  onChange={(e) => updateFilter("technology", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {["Technology", "Healthcare", "Finance", "E-commerce", "Manufacturing"].map((industry) => (
+                  <label key={industry} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={filters.technology === industry}
+                      onChange={(e) => updateFilter("technology", e.target.checked ? industry : "")}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700">{industry}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </FilterSection>
 
           <FilterSection
-            title={pageType === 'companies' ? 'Company Size' : 'Department'}
-            isExpanded={expandedSections.size}
-            onToggle={() => toggleSection('size')}
-            count={0}
+            title="Employee Count"
+            isExpanded={expandedSections.employees}
+            onToggle={() => toggleSection("employees")}
           >
-            <div className="text-sm text-gray-500 italic">
-              Coming soon...
+            <div className="space-y-2">
+              {["1-10", "11-50", "51-200", "201-1000", "1000+"].map((range) => (
+                <label key={range} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-gray-700">{range} employees</span>
+                </label>
+              ))}
             </div>
           </FilterSection>
-
-          <FilterSection
-            title="Location"
-            isExpanded={expandedSections.location}
-            onToggle={() => toggleSection('location')}
-            count={0}
-          >
-            <div className="text-sm text-gray-500 italic">
-              Coming soon...
-            </div>
-          </FilterSection>
-
         </div>
       </div>
-    </div>
-  );
-};
 
-export default ProspectFilter;
-export type { ProspectFilterProps, ICPFilterProps };
+      <div className="border-t border-gray-200 bg-white p-4 flex-shrink-0">
+        <div className="flex gap-3">
+          <button
+            onClick={clearAllFilters}
+            className="flex-1 bg-white hover:bg-gray-50 text-gray-700 py-2.5 px-4 rounded-lg font-medium border border-gray-300 transition-colors duration-150 flex items-center justify-center gap-2"
+          >
+            <X className="h-4 w-4" />
+            Clear
+          </button>
+
+          <button
+            onClick={onApply}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors duration-150 flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Filter className="h-4 w-4" />
+            Apply
+          </button>
+        </div>
+
+        {hasActiveFilters() && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>Active filters:</span>
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                {
+                  [
+                    filters.fundingStage !== 0,
+                    filters.minRevenue > 0,
+                    filters.maxRevenue > 0,
+                    filters.technology !== "",
+                    filters.fundingAmount > 0,
+                  ].filter(Boolean).length
+                }
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default ProspectFilter

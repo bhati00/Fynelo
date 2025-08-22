@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { Combobox, ComboboxItem } from "../../shared/SearchDropdown/searchDropdown" // Adjust import path as needed
+import { Combobox, ComboboxItem } from "../SearchDropdown/searchDropdown" // Adjust import path as needed
 import { icpService } from "@/services/icpService";
 
 export interface ICPProfile {
