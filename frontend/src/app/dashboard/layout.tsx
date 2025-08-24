@@ -108,7 +108,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-screen">
       {/* Mobile Sidebar */}
       <div
         className={`fixed inset-0 z-40 lg:hidden transition-transform ${
@@ -119,16 +119,15 @@ export default function DashboardLayout({
           className="absolute inset-0 bg-black bg-opacity-50" 
           onClick={() => setMobileSidebarOpen(false)}
         ></div>
-        <aside className="relative z-50 w-64 bg-white dark:bg-gray-800 border-r p-4">
+        <aside className="relative z-50 w-64 border-r p-4">
           <div className="flex justify-between items-center mb-6">
             <img src="/logo.png" alt="Fynelo Logo" className="h-8 w-auto" />
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <button 
+              className="btn-primary"
               onClick={() => setMobileSidebarOpen(false)}
             >
               <X className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
           <nav className="space-y-1">
             {menuItems.map((item, index) => {
@@ -164,7 +163,7 @@ export default function DashboardLayout({
 
       {/* Desktop Sidebar (Always collapsed, expands on hover) */}
       <aside 
-        className="hidden lg:flex lg:flex-col bg-white dark:bg-gray-800 border-r p-4 
+        className="hidden lg:flex lg:flex-col border-r p-4 
                    w-16 hover:w-64 transition-all duration-300 group"
       >
         <div className="flex items-center mb-6">
@@ -211,7 +210,7 @@ export default function DashboardLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navbar */}
-        <header className="flex items-center justify-between bg-white dark:bg-gray-800 border-b px-6 py-3">
+        <header className="flex items-center justify-between surface border-b px-6 py-3">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
@@ -221,7 +220,7 @@ export default function DashboardLayout({
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="text-lg font-semibold">Welcome Dear user!</span>
+            <span className="text-lg heading-3">Welcome Dear user!</span>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -233,7 +232,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 surface">{children}</main>
       </div>
     </div>
   );

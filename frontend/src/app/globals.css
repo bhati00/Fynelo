@@ -31,8 +31,8 @@
   --color-surface-secondary: #F1F5F9; /* NEW - for better layering */
   --color-border: #E2E8F0;
   --color-border-focus: #CBD5E1; /* NEW - for focused states */
-  --color-text-primary: #0F172A; /* Darker for better contrast */
-  --color-text-secondary: #475569; /* Darker for better readability */
+  --color-text-primary: #1A365D; /* Darker for better contrast */
+  --color-text-secondary: #1A365D; /* Darker for better readability */
   --color-text-muted: #64748B; /* Improved muted text */
   
   /* Dark Mode Colors - IMPROVED */
@@ -199,7 +199,7 @@ html.dark {
 .btn-primary {
   background: var(--gradient-primary);
   color: #FFFFFF;
-  padding: var(--spacing-3) var(--spacing-6);
+  padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--border-radius);
   font-weight: 600;
   font-size: var(--font-size-sm);
@@ -276,7 +276,7 @@ html.dark {
 .btn-brand {
   background: var(--gradient-brand);
   color: #FFFFFF;
-  padding: var(--spacing-3) var(--spacing-6);
+  padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--border-radius);
   font-weight: 600;
   font-size: var(--font-size-sm);
@@ -299,10 +299,12 @@ html.dark {
 
 .dark .btn-brand {
   background: var(--gradient-dark-brand);
+  color: var(--color-text-primary);
 }
 
 .dark .btn-brand:hover {
   background: linear-gradient(135deg, #DC2626 0%, #EA580C 100%);
+  color: #FFFFFF;
 }
 
 .dark .btn-brand:focus {
@@ -316,13 +318,6 @@ html.dark {
   border-radius: var(--border-radius-md);
   padding: var(--spacing-6);
   box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease-in-out;
-}
-
-.card:hover {
-  box-shadow: var(--shadow);
-  border-color: var(--color-border-focus);
-  transform: translateY(-1px);
 }
 
 .dark .card {
@@ -331,10 +326,6 @@ html.dark {
   box-shadow: var(--shadow-dark-sm);
 }
 
-.dark .card:hover {
-  box-shadow: var(--shadow-dark);
-  border-color: var(--color-dark-border-focus);
-}
 
 .card-elevated {
   background: var(--color-background);
@@ -342,12 +333,6 @@ html.dark {
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-8);
   box-shadow: var(--shadow-lg);
-  transition: all 0.2s ease-in-out;
-}
-
-.card-elevated:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .dark .card-elevated {
@@ -355,9 +340,6 @@ html.dark {
   box-shadow: var(--shadow-dark-lg);
 }
 
-.dark .card-elevated:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-}
 
 /* NEW - Surface Card Variant */
 .card-surface {
@@ -365,22 +347,11 @@ html.dark {
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   padding: var(--spacing-6);
-  transition: all 0.2s ease-in-out;
-}
-
-.card-surface:hover {
-  background: var(--color-surface-secondary);
-  border-color: var(--color-border-focus);
 }
 
 .dark .card-surface {
   background: var(--color-dark-surface-secondary);
   border-color: var(--color-dark-border);
-}
-
-.dark .card-surface:hover {
-  background: var(--color-dark-surface);
-  border-color: var(--color-dark-border-focus);
 }
 
 /* Form Classes - IMPROVED */
@@ -693,7 +664,7 @@ nav {
 }
 
 main {
-  background: var(--color-background);
+  background: var(--color-surface-secondary);
   min-height: calc(100vh - 200px); /* Ensure proper height */
 }
 
@@ -721,7 +692,7 @@ article {
 
 /* Dark mode layout elements - IMPROVED */
 .dark header {
-  background: var(--color-dark-background);
+  background: var(--color-dark-surface);
   border-bottom-color: var(--color-dark-border);
 }
 
@@ -730,7 +701,7 @@ article {
 }
 
 .dark main {
-  background: var(--color-dark-background);
+  background: var(--color-dark-surface-secondary);
 }
 
 .dark aside {
