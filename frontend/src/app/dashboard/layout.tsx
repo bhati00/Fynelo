@@ -232,7 +232,8 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 surface">{children}</main>
+        <main  className="flex-1 min-h-[calc(100vh-200px)] main-surface" 
+  >{children}</main>
       </div>
     </div>
   );

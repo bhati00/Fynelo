@@ -663,11 +663,6 @@ nav {
   background: var(--color-surface);
 }
 
-main {
-  background: var(--color-surface-secondary);
-  min-height: calc(100vh - 200px); /* Ensure proper height */
-}
-
 aside {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -698,10 +693,6 @@ article {
 
 .dark nav {
   background: var(--color-dark-surface);
-}
-
-.dark main {
-  background: var(--color-dark-surface-secondary);
 }
 
 .dark aside {
@@ -1060,4 +1051,12 @@ textarea {
 
 .dark .success-message {
   color: var(--color-dark-success);
+}
+
+.main-surface {
+  background-color: var(--color-surface-secondary);
+}
+
+.dark .main-surface {
+  background-color: var(--color-dark-surface-secondary);
 }
