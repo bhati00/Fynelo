@@ -249,7 +249,7 @@ export default function ICPCreateModal({ open, onOpenChange, onCreated }: ICPCre
           
           {/* Progress indicator */}
           <div className="space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
+            <div className="flex justify-between text-sm text-organe-500 dark:text-orange-400 font-medium">
               <span>Step {currentStep + 1} of {steps.length}</span>
               <span>{Math.round(progress)}% complete</span>
             </div>

@@ -1060,3 +1060,21 @@ textarea {
 .dark .main-surface {
   background-color: var(--color-dark-surface-secondary);
 }
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-sm);
+  margin-bottom: var(--spacing-2);
+  display: block;
+}
+
+.dark .label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-sm);
+  margin-bottom: var(--spacing-2);
+  display: block;
+}

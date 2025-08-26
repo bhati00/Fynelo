@@ -82,7 +82,7 @@ export default function ICPEditModal({ open, onOpenChange, icpData, onUpdated }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] rounded-lg">
+      <DialogContent className="sm:max-w-[500px] max-h-[500px] overflow-auto rounded-lg">
         <DialogHeader className="space-y-4">
           <div className="flex justify-between items-center">
             <DialogTitle className="text-xl flex items-center gap-2">
