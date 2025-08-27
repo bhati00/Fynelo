@@ -1,9 +1,10 @@
 package company
 
 import (
+	"github.com/bhati00/Fynelo/backend/internal/company/model"
 	"github.com/bhati00/Fynelo/backend/pkg/database"
 )
 
 func Migrate() {
-	database.DB.AutoMigrate(&Company{}, &Industry{}, &Location{}, &Revenue{}, &FundingRound{}, &Technology{})
+	database.DB.AutoMigrate(&model.Company{}, &model.Industry{}, &model.Location{}, &model.Revenue{}, &model.FundingRound{}, &model.Technology{})
 }

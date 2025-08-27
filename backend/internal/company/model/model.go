@@ -1,4 +1,4 @@
-package company
+package model
 
 // backend/internal/company/model.go
 import (
