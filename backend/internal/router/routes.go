@@ -2,6 +2,9 @@ package router
 
 import (
 	"github.com/bhati00/Fynelo/backend/config"
+	"github.com/bhati00/Fynelo/backend/internal/company"
+	"github.com/bhati00/Fynelo/backend/internal/company/repositories"
+	"github.com/bhati00/Fynelo/backend/internal/company/service"
 	"github.com/bhati00/Fynelo/backend/internal/icp"
 	"github.com/bhati00/Fynelo/backend/pkg/database"
 	"github.com/gin-gonic/gin"
@@ -17,6 +20,12 @@ func SetupRoutes(r *gin.Engine) {
 	icpService := icp.NewService(icpRepo)    // Initialize the service with the database connection
 	icpHandler := icp.NewHandler(icpService) // Create a new handler with the service
 
+	// Company management
+	companyRepo := repositories.NewCompanyRepository(db)
+	companyService := service.NewCompanyService(companyRepo)
+	companyHandler := company.NewHandler(companyService)
+
 	// Register feature routes
 	icp.RegisterICPRoutes(api, icpHandler)
+	company.RegisterCompanyRoutes(api, companyHandler)
 }

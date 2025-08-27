@@ -4,6 +4,7 @@ package model
 import (
 	"time"
 
+	"github.com/bhati00/Fynelo/backend/internal/constants"
 	"gorm.io/gorm"
 )
 
@@ -31,39 +32,28 @@ const (
 
 // Company represents the main company entity
 type Company struct {
-	ID             uint           `gorm:"primaryKey" json:"id"`
-	Name           string         `gorm:"not null;index" json:"name"`
-	Website        *string        `json:"website"`
-	HQLocation     *string        `json:"hq_location"`
-	IndustryID     *uint          `json:"industry_id"`
-	Industry       *Industry      `gorm:"foreignKey:IndustryID" json:"industry,omitempty"`
-	EmployeeRange  *string        `json:"employee_range"`
-	FoundedYear    *int           `json:"founded_year"`
-	Status         CompanyStatus  `gorm:"type:varchar(20);default:'active'" json:"status"`
-	Source         string         `gorm:"type:varchar(50)" json:"source"` // "manual", "scraped", "api"
-	LastEnrichedAt *time.Time     `json:"last_enriched_at"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `gorm:"index" json:"-"`
+	ID               uint           `gorm:"primaryKey" json:"id"`
+	Name             string         `gorm:"not null;index" json:"name"`
+	Website          *string        `json:"website"`
+	HQLocation       *string        `json:"hq_location"`
+	IndustryID       *int           `json:"industry_id"`        // Changed to int to use constants
+	EmployeeSizeID   *int           `json:"employee_size_id"`   // Changed from EmployeeRange to use constants
+	FoundedYear      *int           `json:"founded_year"`
+	Status           CompanyStatus  `gorm:"type:varchar(20);default:'active'" json:"status"`
+	Source           string         `gorm:"type:varchar(50)" json:"source"` // "manual", "scraped", "api"
+	LastEnrichedAt   *time.Time     `json:"last_enriched_at"`
+	CreatedAt        time.Time      `json:"created_at"`
+	UpdatedAt        time.Time      `json:"updated_at"`
+	DeletedAt        gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// Relationships
-	Revenues      []Revenue      `gorm:"foreignKey:CompanyID" json:"revenues,omitempty"`
-	FundingRounds []FundingRound `gorm:"foreignKey:CompanyID" json:"funding_rounds,omitempty"`
-	Technologies  []Technology   `gorm:"foreignKey:CompanyID" json:"technologies,omitempty"`
-	Locations     []Location     `gorm:"foreignKey:CompanyID" json:"locations,omitempty"`
+	Revenues         []Revenue      `gorm:"foreignKey:CompanyID" json:"revenues,omitempty"`
+	FundingRounds    []FundingRound `gorm:"foreignKey:CompanyID" json:"funding_rounds,omitempty"`
+	Technologies     []Technology   `gorm:"foreignKey:CompanyID" json:"technologies,omitempty"`
+	Locations        []Location     `gorm:"foreignKey:CompanyID" json:"locations,omitempty"`
 }
 
-// Industry represents company industries
-type Industry struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Name      string         `gorm:"not null;unique" json:"name"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-
-	// Relationships
-	Companies []Company `gorm:"foreignKey:IndustryID" json:"companies,omitempty"`
-}
+// Note: Industry is now handled via constants instead of a separate table
 
 // Revenue represents company revenue data
 type Revenue struct {
@@ -124,10 +114,6 @@ func (Company) TableName() string {
 	return "companies"
 }
 
-func (Industry) TableName() string {
-	return "industries"
-}
-
 func (Revenue) TableName() string {
 	return "revenues"
 }
@@ -142,4 +128,29 @@ func (Technology) TableName() string {
 
 func (Location) TableName() string {
 	return "locations"
+}
+
+// Helper methods for Company model
+func (c *Company) GetIndustryName() string {
+	if c.IndustryID == nil {
+		return "Unknown"
+	}
+	return constants.GetIndustryName(*c.IndustryID)
+}
+
+func (c *Company) GetEmployeeSizeRange() string {
+	if c.EmployeeSizeID == nil {
+		return "Unknown"
+	}
+	return constants.GetCompanySizeRange(*c.EmployeeSizeID)
+}
+
+func (c *Company) SetIndustryByName(industryName string) {
+	industryID := constants.GetIndustryID(industryName)
+	c.IndustryID = &industryID
+}
+
+func (c *Company) SetEmployeeSizeByRange(sizeRange string) {
+	sizeID := constants.GetCompanySizeID(sizeRange)
+	c.EmployeeSizeID = &sizeID
 }

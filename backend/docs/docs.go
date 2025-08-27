@@ -23,6 +23,208 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/companies": {
+            "get": {
+                "description": "List companies with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "List companies",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Results limit (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Results offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Company"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/search": {
+            "get": {
+                "description": "Search companies with various filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Search companies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query (company name, website)",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Industry filter (e.g., technology, fintech)",
+                        "name": "industry",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee size range (e.g., 1-10, 11-50)",
+                        "name": "employee_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Location filter",
+                        "name": "location",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Funding stage (seed, series_a, etc.)",
+                        "name": "funding_stage",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Founded after year",
+                        "name": "founded_min",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Founded before year",
+                        "name": "founded_max",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Company status (active, closed, etc.)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Results limit (default: 20, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Results offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.CompanySearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{id}": {
+            "get": {
+                "description": "Get a company by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Get company by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Company"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/icp": {
             "post": {
                 "description": "Creates a new Ideal Customer Profile for a given user",
@@ -286,13 +488,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "business_type": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "buyer_roles": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "company_size": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "created_at": {
                     "type": "string"
@@ -310,6 +512,261 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Company": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_size_id": {
+                    "description": "Changed from EmployeeRange to use constants",
+                    "type": "integer"
+                },
+                "founded_year": {
+                    "type": "integer"
+                },
+                "funding_rounds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.FundingRound"
+                    }
+                },
+                "hq_location": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "industry_id": {
+                    "description": "Changed to int to use constants",
+                    "type": "integer"
+                },
+                "last_enriched_at": {
+                    "type": "string"
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Location"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "revenues": {
+                    "description": "Relationships",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Revenue"
+                    }
+                },
+                "source": {
+                    "description": "\"manual\", \"scraped\", \"api\"",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/model.CompanyStatus"
+                },
+                "technologies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Technology"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CompanyStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "closed",
+                "acquired",
+                "ipo",
+                "private"
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusClosed",
+                "StatusAcquired",
+                "StatusIPO",
+                "StatusPrivate"
+            ]
+        },
+        "model.FundingRound": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "nullable for undisclosed amounts",
+                    "type": "number"
+                },
+                "company": {
+                    "$ref": "#/definitions/model.Company"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "investors": {
+                    "description": "JSON string or comma-separated",
+                    "type": "string"
+                },
+                "round_type": {
+                    "$ref": "#/definitions/model.FundingRoundType"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.FundingRoundType": {
+            "type": "string",
+            "enum": [
+                "seed",
+                "series_a",
+                "series_b",
+                "series_c",
+                "series_d",
+                "ipo",
+                "acquisition"
+            ],
+            "x-enum-varnames": [
+                "RoundSeed",
+                "RoundSeriesA",
+                "RoundSeriesB",
+                "RoundSeriesC",
+                "RoundSeriesD",
+                "RoundIPO",
+                "RoundAcquisition"
+            ]
+        },
+        "model.Location": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "company": {
+                    "$ref": "#/definitions/model.Company"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Revenue": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "company": {
+                    "$ref": "#/definitions/model.Company"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "description": "USD, EUR, etc.",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Technology": {
+            "type": "object",
+            "properties": {
+                "company": {
+                    "$ref": "#/definitions/model.Company"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "technology_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.CompanySearchResponse": {
+            "type": "object",
+            "properties": {
+                "companies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Company"
+                    }
+                },
+                "has_more": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
                     "type": "integer"
                 }
             }

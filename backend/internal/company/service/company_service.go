@@ -3,10 +3,33 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/bhati00/Fynelo/backend/internal/company/model"
 	"github.com/bhati00/Fynelo/backend/internal/company/repositories"
+	"github.com/bhati00/Fynelo/backend/internal/constants"
 )
+
+type CompanySearchRequest struct {
+	Query        string `form:"q"`
+	Industry     string `form:"industry"`
+	EmployeeSize string `form:"employee_size"`
+	Location     string `form:"location"`
+	FundingStage string `form:"funding_stage"`
+	FoundedMin   *int   `form:"founded_min"`
+	FoundedMax   *int   `form:"founded_max"`
+	Status       string `form:"status"`
+	Limit        int    `form:"limit"`
+	Offset       int    `form:"offset"`
+}
+
+type CompanySearchResponse struct {
+	Companies []model.Company `json:"companies"`
+	Total     int64           `json:"total"`
+	HasMore   bool            `json:"has_more"`
+	Limit     int             `json:"limit"`
+	Offset    int             `json:"offset"`
+}
 
 type CompanyService interface {
 	CreateCompany(ctx context.Context, c *model.Company) error
@@ -15,6 +38,8 @@ type CompanyService interface {
 	ListCompanies(ctx context.Context, limit, offset int) ([]model.Company, error)
 	UpdateCompany(ctx context.Context, c *model.Company) error
 	DeleteCompany(ctx context.Context, id uint) error
+	// New search method
+	SearchCompanies(ctx context.Context, req CompanySearchRequest) (*CompanySearchResponse, error)
 }
 
 type companyService struct {
@@ -57,4 +82,62 @@ func (s *companyService) UpdateCompany(ctx context.Context, c *model.Company) er
 
 func (s *companyService) DeleteCompany(ctx context.Context, id uint) error {
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *companyService) SearchCompanies(ctx context.Context, req CompanySearchRequest) (*CompanySearchResponse, error) {
+	// Set default pagination
+	if req.Limit <= 0 {
+		req.Limit = 20
+	}
+	if req.Limit > 100 {
+		req.Limit = 100 // Max limit
+	}
+	
+	// Convert search request to repository params
+	params := repositories.CompanySearchParams{
+		Query:      req.Query,
+		Location:   req.Location,
+		FundingStage: req.FundingStage,
+		FoundedMin: req.FoundedMin,
+		FoundedMax: req.FoundedMax,
+		Status:     req.Status,
+		Limit:      req.Limit,
+		Offset:     req.Offset,
+	}
+	
+	// Convert industry name to ID
+	if req.Industry != "" {
+		industryID := constants.GetIndustryID(strings.ToLower(req.Industry))
+		if industryID != constants.IndustryOther || strings.ToLower(req.Industry) == "other" {
+			params.IndustryID = &industryID
+		}
+	}
+	
+	// Convert employee size to ID
+	if req.EmployeeSize != "" {
+		sizeID := constants.GetCompanySizeID(req.EmployeeSize)
+		params.EmployeeSizeID = &sizeID
+	}
+	
+	// Get companies and total count
+	companies, err := s.repo.Search(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	
+	total, err := s.repo.SearchCount(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Check if there are more results
+	hasMore := int64(req.Offset+req.Limit) < total
+	
+	return &CompanySearchResponse{
+		Companies: companies,
+		Total:     total,
+		HasMore:   hasMore,
+		Limit:     req.Limit,
+		Offset:    req.Offset,
+	}, nil
 }
