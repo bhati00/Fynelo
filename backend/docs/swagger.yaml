@@ -3,11 +3,11 @@ definitions:
   icp.ICPProfile:
     properties:
       business_type:
-        type: string
+        type: integer
       buyer_roles:
-        type: string
+        type: integer
       company_size:
-        type: string
+        type: integer
       created_at:
         type: string
       id:
@@ -19,6 +19,183 @@ definitions:
       updated_at:
         type: string
       user_id:
+        type: integer
+    type: object
+  model.Company:
+    properties:
+      created_at:
+        type: string
+      employee_size_id:
+        description: Changed from EmployeeRange to use constants
+        type: integer
+      founded_year:
+        type: integer
+      funding_rounds:
+        items:
+          $ref: '#/definitions/model.FundingRound'
+        type: array
+      hq_location:
+        type: string
+      id:
+        type: integer
+      industry_id:
+        description: Changed to int to use constants
+        type: integer
+      last_enriched_at:
+        type: string
+      locations:
+        items:
+          $ref: '#/definitions/model.Location'
+        type: array
+      name:
+        type: string
+      revenues:
+        description: Relationships
+        items:
+          $ref: '#/definitions/model.Revenue'
+        type: array
+      source:
+        description: '"manual", "scraped", "api"'
+        type: string
+      status:
+        $ref: '#/definitions/model.CompanyStatus'
+      technologies:
+        items:
+          $ref: '#/definitions/model.Technology'
+        type: array
+      updated_at:
+        type: string
+      website:
+        type: string
+    type: object
+  model.CompanyStatus:
+    enum:
+    - active
+    - closed
+    - acquired
+    - ipo
+    - private
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusClosed
+    - StatusAcquired
+    - StatusIPO
+    - StatusPrivate
+  model.FundingRound:
+    properties:
+      amount:
+        description: nullable for undisclosed amounts
+        type: number
+      company:
+        $ref: '#/definitions/model.Company'
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      currency:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      investors:
+        description: JSON string or comma-separated
+        type: string
+      round_type:
+        $ref: '#/definitions/model.FundingRoundType'
+      updated_at:
+        type: string
+    type: object
+  model.FundingRoundType:
+    enum:
+    - seed
+    - series_a
+    - series_b
+    - series_c
+    - series_d
+    - ipo
+    - acquisition
+    type: string
+    x-enum-varnames:
+    - RoundSeed
+    - RoundSeriesA
+    - RoundSeriesB
+    - RoundSeriesC
+    - RoundSeriesD
+    - RoundIPO
+    - RoundAcquisition
+  model.Location:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      company:
+        $ref: '#/definitions/model.Company'
+      company_id:
+        type: integer
+      country:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      postal_code:
+        type: string
+      state:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Revenue:
+    properties:
+      amount:
+        type: number
+      company:
+        $ref: '#/definitions/model.Company'
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      currency:
+        description: USD, EUR, etc.
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      year:
+        type: integer
+    type: object
+  model.Technology:
+    properties:
+      company:
+        $ref: '#/definitions/model.Company'
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      technology_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  service.CompanySearchResponse:
+    properties:
+      companies:
+        items:
+          $ref: '#/definitions/model.Company'
+        type: array
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
         type: integer
     type: object
 host: localhost:8080
@@ -34,6 +211,139 @@ info:
   title: Fynelo API
   version: "1.0"
 paths:
+  /companies:
+    get:
+      consumes:
+      - application/json
+      description: List companies with pagination
+      parameters:
+      - description: 'Results limit (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Results offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Company'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List companies
+      tags:
+      - Companies
+  /companies/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a company by its ID
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Company'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get company by ID
+      tags:
+      - Companies
+  /companies/search:
+    get:
+      consumes:
+      - application/json
+      description: Search companies with various filters
+      parameters:
+      - description: Search query (company name, website)
+        in: query
+        name: q
+        type: string
+      - description: Industry filter (e.g., technology, fintech)
+        in: query
+        name: industry
+        type: string
+      - description: Employee size range (e.g., 1-10, 11-50)
+        in: query
+        name: employee_size
+        type: string
+      - description: Location filter
+        in: query
+        name: location
+        type: string
+      - description: Funding stage (seed, series_a, etc.)
+        in: query
+        name: funding_stage
+        type: string
+      - description: Founded after year
+        in: query
+        name: founded_min
+        type: integer
+      - description: Founded before year
+        in: query
+        name: founded_max
+        type: integer
+      - description: Company status (active, closed, etc.)
+        in: query
+        name: status
+        type: string
+      - description: 'Results limit (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Results offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.CompanySearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search companies
+      tags:
+      - Companies
   /icp:
     post:
       consumes:
