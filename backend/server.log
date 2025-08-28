@@ -1,0 +1,31 @@
+2025/08/28 10:23:17 Running database migrations...
+2025/08/28 10:23:17 Database migrations completed
+2025/08/28 10:23:17 Connecting to Redis...
+2025/08/28 10:23:18 Warning: Redis connection failed: dial tcp [::1]:6379: connect: connection refused
+2025/08/28 10:23:18 Queue functionality will be disabled
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (4 handlers)
+[GIN-debug] POST   /api/icp                  --> github.com/bhati00/Fynelo/backend/internal/icp.(*Handler).CreateICPHandler-fm (4 handlers)
+[GIN-debug] GET    /api/icp/:id              --> github.com/bhati00/Fynelo/backend/internal/icp.(*Handler).GetICPByIDHandler-fm (4 handlers)
+[GIN-debug] GET    /api/icp/user             --> github.com/bhati00/Fynelo/backend/internal/icp.(*Handler).ListICPsByUserHandler-fm (4 handlers)
+[GIN-debug] PUT    /api/icp/:id              --> github.com/bhati00/Fynelo/backend/internal/icp.(*Handler).UpdateICPHandler-fm (4 handlers)
+[GIN-debug] DELETE /api/icp/:id              --> github.com/bhati00/Fynelo/backend/internal/icp.(*Handler).DeleteICPHandler-fm (4 handlers)
+[GIN-debug] GET    /api/companies/search     --> github.com/bhati00/Fynelo/backend/internal/company.(*Handler).SearchCompaniesHandler-fm (4 handlers)
+[GIN-debug] GET    /api/companies/:id        --> github.com/bhati00/Fynelo/backend/internal/company.(*Handler).GetCompanyHandler-fm (4 handlers)
+[GIN-debug] GET    /api/companies            --> github.com/bhati00/Fynelo/backend/internal/company.(*Handler).ListCompaniesHandler-fm (4 handlers)
+[GIN-debug] GET    /api/jobs/stats           --> github.com/bhati00/Fynelo/backend/internal/queue.(*Handler).GetQueueStatsHandler-fm (4 handlers)
+[GIN-debug] GET    /api/jobs/:id             --> github.com/bhati00/Fynelo/backend/internal/queue.(*Handler).GetJobStatusHandler-fm (4 handlers)
+[GIN-debug] GET    /api/jobs/user/:user_id   --> github.com/bhati00/Fynelo/backend/internal/queue.(*Handler).GetUserJobsHandler-fm (4 handlers)
+2025/08/28 10:23:18 Server running on http://localhost:8080
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8080
+[GIN] 2025/08/28 - 10:23:26 | 200 |     913.153µs |             ::1 | GET      "/api/companies/search?q=fintech&industry=technology"
+[GIN] 2025/08/28 - 10:23:31 | 503 |      58.704µs |             ::1 | GET      "/api/jobs/stats"
+[GIN] 2025/08/28 - 10:23:36 | 200 |     320.788µs |             ::1 | GET      "/api/companies/search"
+[GIN] 2025/08/28 - 10:23:41 | 503 |      47.046µs |             ::1 | GET      "/api/jobs/search_123"

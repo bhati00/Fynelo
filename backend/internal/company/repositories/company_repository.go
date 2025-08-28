@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"strings"
 
 	models "github.com/bhati00/Fynelo/backend/internal/company/model"
 
@@ -100,9 +101,9 @@ func (r *companyRepo) SearchCount(ctx context.Context, params CompanySearchParam
 func (r *companyRepo) buildSearchQuery(params CompanySearchParams) *gorm.DB {
 	query := r.db.Model(&models.Company{})
 	
-	// Text search on name and website
+	// Text search on name and website (SQLite uses LIKE, not ILIKE)
 	if params.Query != "" {
-		query = query.Where("name ILIKE ? OR website ILIKE ?", "%"+params.Query+"%", "%"+params.Query+"%")
+		query = query.Where("LOWER(name) LIKE ? OR LOWER(website) LIKE ?", "%"+strings.ToLower(params.Query)+"%", "%"+strings.ToLower(params.Query)+"%")
 	}
 	
 	// Industry filter
@@ -117,7 +118,7 @@ func (r *companyRepo) buildSearchQuery(params CompanySearchParams) *gorm.DB {
 	
 	// Location filter (search in HQ location)
 	if params.Location != "" {
-		query = query.Where("hq_location ILIKE ?", "%"+params.Location+"%")
+		query = query.Where("LOWER(hq_location) LIKE ?", "%"+strings.ToLower(params.Location)+"%")
 	}
 	
 	// Founded year filters
