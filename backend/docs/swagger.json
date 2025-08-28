@@ -475,6 +475,151 @@
                     }
                 }
             }
+        },
+        "/jobs/stats": {
+            "get": {
+                "description": "Get current queue statistics and health",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Queue"
+                ],
+                "summary": "Get queue statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs/user/{user_id}": {
+            "get": {
+                "description": "Get all jobs for a specific user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Queue"
+                ],
+                "summary": "Get user's jobs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/queue.SearchJob"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs/{id}": {
+            "get": {
+                "description": "Get the status of a search job by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Queue"
+                ],
+                "summary": "Get job status by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/queue.SearchJob"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -742,6 +887,107 @@
                 }
             }
         },
+        "queue.JobPriority": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "x-enum-varnames": [
+                "PriorityLow",
+                "PriorityNormal",
+                "PriorityHigh",
+                "PriorityUrgent"
+            ]
+        },
+        "queue.JobStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "processing",
+                "completed",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "StatusPending",
+                "StatusProcessing",
+                "StatusCompleted",
+                "StatusFailed"
+            ]
+        },
+        "queue.SearchFilters": {
+            "type": "object",
+            "properties": {
+                "employee_size": {
+                    "type": "string"
+                },
+                "founded_max": {
+                    "type": "integer"
+                },
+                "founded_min": {
+                    "type": "integer"
+                },
+                "funding_stage": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "queue.SearchJob": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "error_msg": {
+                    "type": "string"
+                },
+                "filters": {
+                    "$ref": "#/definitions/queue.SearchFilters"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "max_retries": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "$ref": "#/definitions/queue.JobPriority"
+                },
+                "processed_at": {
+                    "type": "string"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "result_count": {
+                    "type": "integer"
+                },
+                "retry_count": {
+                    "description": "For future use",
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/queue.JobStatus"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "service.CompanySearchResponse": {
             "type": "object",
             "properties": {
@@ -760,8 +1006,31 @@
                 "offset": {
                     "type": "integer"
                 },
+                "queued_jobs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.QueuedJob"
+                    }
+                },
+                "search_time": {
+                    "type": "string"
+                },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "service.QueuedJob": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         }

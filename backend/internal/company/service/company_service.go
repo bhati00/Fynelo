@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/bhati00/Fynelo/backend/internal/company/model"
 	"github.com/bhati00/Fynelo/backend/internal/company/repositories"
 	"github.com/bhati00/Fynelo/backend/internal/constants"
+	"github.com/bhati00/Fynelo/backend/internal/queue"
 )
 
 type CompanySearchRequest struct {
@@ -24,11 +26,19 @@ type CompanySearchRequest struct {
 }
 
 type CompanySearchResponse struct {
-	Companies []model.Company `json:"companies"`
-	Total     int64           `json:"total"`
-	HasMore   bool            `json:"has_more"`
-	Limit     int             `json:"limit"`
-	Offset    int             `json:"offset"`
+	Companies   []model.Company `json:"companies"`
+	Total       int64           `json:"total"`
+	HasMore     bool            `json:"has_more"`
+	Limit       int             `json:"limit"`
+	Offset      int             `json:"offset"`
+	QueuedJobs  []QueuedJob     `json:"queued_jobs,omitempty"`
+	SearchTime  string          `json:"search_time"`
+}
+
+type QueuedJob struct {
+	ID        string `json:"id"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"created_at"`
 }
 
 type CompanyService interface {
@@ -43,11 +53,15 @@ type CompanyService interface {
 }
 
 type companyService struct {
-	repo repositories.CompanyRepository
+	repo         repositories.CompanyRepository
+	queueService queue.QueueService
 }
 
-func NewCompanyService(repo repositories.CompanyRepository) CompanyService {
-	return &companyService{repo: repo}
+func NewCompanyService(repo repositories.CompanyRepository, queueService queue.QueueService) CompanyService {
+	return &companyService{
+		repo:         repo,
+		queueService: queueService,
+	}
 }
 
 func (s *companyService) CreateCompany(ctx context.Context, c *model.Company) error {
@@ -85,6 +99,8 @@ func (s *companyService) DeleteCompany(ctx context.Context, id uint) error {
 }
 
 func (s *companyService) SearchCompanies(ctx context.Context, req CompanySearchRequest) (*CompanySearchResponse, error) {
+	startTime := time.Now()
+	
 	// Set default pagination
 	if req.Limit <= 0 {
 		req.Limit = 20
@@ -95,14 +111,14 @@ func (s *companyService) SearchCompanies(ctx context.Context, req CompanySearchR
 	
 	// Convert search request to repository params
 	params := repositories.CompanySearchParams{
-		Query:      req.Query,
-		Location:   req.Location,
+		Query:        req.Query,
+		Location:     req.Location,
 		FundingStage: req.FundingStage,
-		FoundedMin: req.FoundedMin,
-		FoundedMax: req.FoundedMax,
-		Status:     req.Status,
-		Limit:      req.Limit,
-		Offset:     req.Offset,
+		FoundedMin:   req.FoundedMin,
+		FoundedMax:   req.FoundedMax,
+		Status:       req.Status,
+		Limit:        req.Limit,
+		Offset:       req.Offset,
 	}
 	
 	// Convert industry name to ID
@@ -119,7 +135,7 @@ func (s *companyService) SearchCompanies(ctx context.Context, req CompanySearchR
 		params.EmployeeSizeID = &sizeID
 	}
 	
-	// Get companies and total count
+	// Get companies and total count from local DB
 	companies, err := s.repo.Search(ctx, params)
 	if err != nil {
 		return nil, err
@@ -132,12 +148,67 @@ func (s *companyService) SearchCompanies(ctx context.Context, req CompanySearchR
 	
 	// Check if there are more results
 	hasMore := int64(req.Offset+req.Limit) < total
+	searchTime := time.Since(startTime).String()
 	
-	return &CompanySearchResponse{
-		Companies: companies,
-		Total:     total,
-		HasMore:   hasMore,
-		Limit:     req.Limit,
-		Offset:    req.Offset,
-	}, nil
+	response := &CompanySearchResponse{
+		Companies:  companies,
+		Total:      total,
+		HasMore:    hasMore,
+		Limit:      req.Limit,
+		Offset:     req.Offset,
+		SearchTime: searchTime,
+	}
+	
+	// Queue for enrichment if results are limited and we have search criteria
+	if s.shouldEnqueueForEnrichment(req, total) {
+		queuedJob := s.enqueueSearchJob(req)
+		if queuedJob != nil {
+			response.QueuedJobs = []QueuedJob{*queuedJob}
+		}
+	}
+	
+	return response, nil
+}
+
+func (s *companyService) shouldEnqueueForEnrichment(req CompanySearchRequest, currentTotal int64) bool {
+	// Only queue if we have specific search criteria and limited results
+	hasSearchCriteria := req.Query != "" || req.Industry != "" || req.EmployeeSize != "" || 
+						req.Location != "" || req.FundingStage != ""
+	
+	// Queue if we have search criteria and less than 50 results
+	return hasSearchCriteria && currentTotal < 50
+}
+
+func (s *companyService) enqueueSearchJob(req CompanySearchRequest) *QueuedJob {
+	if s.queueService == nil {
+		return nil // Queue service not available
+	}
+	
+	// Create search job
+	searchJob := &queue.SearchJob{
+		Query: req.Query,
+		Filters: queue.SearchFilters{
+			Industry:     req.Industry,
+			EmployeeSize: req.EmployeeSize,
+			Location:     req.Location,
+			FundingStage: req.FundingStage,
+			FoundedMin:   req.FoundedMin,
+			FoundedMax:   req.FoundedMax,
+			Status:       req.Status,
+		},
+		Priority: queue.PriorityNormal,
+	}
+	
+	// Enqueue the job
+	if err := s.queueService.EnqueueSearch(searchJob); err != nil {
+		// Log error but don't fail the search
+		// In production, you'd want proper logging here
+		return nil
+	}
+	
+	return &QueuedJob{
+		ID:        searchJob.ID,
+		Status:    string(searchJob.Status),
+		CreatedAt: searchJob.CreatedAt.Format(time.RFC3339),
+	}
 }
