@@ -1,0 +1,75 @@
+version: '3'
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list-all
+    silent: true
+
+  help:
+    desc: Show help information
+    cmds:
+      - echo "Available tasks:"
+      - echo "  server  - Run the API server"
+      - echo "  worker  - Run the background worker"
+      - echo "  both    - Run both server and worker (in separate windows)"
+      - echo "  test    - Run tests"
+      - echo "  build   - Build binaries"
+      - echo "  deps    - Install dependencies"
+      - echo "  clean   - Clean build artifacts"
+    silent: true
+
+  server:
+    desc: Run the API server
+    cmds:
+      - echo "Starting API server..."
+      - go run ./cmd/server
+
+  worker:
+    desc: Run the background worker
+    cmds:
+      - echo "Starting background worker..."
+      - go run ./cmd/worker
+
+  both:
+    desc: Run both server and worker (in separate PowerShell windows)
+    cmds:
+      - echo "Starting both server and worker..."
+      - powershell -Command "Start-Process powershell -ArgumentList '-NoExit', '-Command', 'task server'"
+      - powershell -Command "Start-Process powershell -ArgumentList '-NoExit', '-Command', 'task worker'"
+      - echo "Started server and worker in separate PowerShell windows"
+
+  both-background:
+    desc: Run both server and worker in background (alternative approach)
+    cmds:
+      - echo "Starting server and worker in background..."
+      - powershell -Command "Start-Job -ScriptBlock { task server } -Name 'fynelo-server'"
+      - powershell -Command "Start-Job -ScriptBlock { task worker } -Name 'fynelo-worker'"
+      - echo "Started background jobs. Use 'Get-Job' to monitor and 'Stop-Job' to stop them."
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./...
+
+  build:
+    desc: Build binaries
+    cmds:
+      - go build -o server.exe ./cmd/server
+      - go build -o worker.exe ./cmd/worker
+
+  deps:
+    desc: Install dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - go clean
+      - powershell -Command "if (Test-Path 'server.exe') { Remove-Item 'server.exe' }"
+      - powershell -Command "if (Test-Path 'worker.exe') { Remove-Item 'worker.exe' }"
+      - powershell -Command "if (Test-Path 'server') { Remove-Item 'server' }"
+      - powershell -Command "if (Test-Path 'worker') { Remove-Item 'worker' }"
